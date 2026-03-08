@@ -798,7 +798,7 @@ body { padding-bottom: 80px; }
   const db      = getDatabase(app);
   const rifaRef = ref(db, 'rifa');
 
-  const ADMIN_PASSWORD = 'chiwita';
+  const ADMIN_PASSWORD = '012';
   let isAdmin       = false;
   let data          = {};
   let currentFilter = 'all';
@@ -1217,7 +1217,7 @@ body { padding-bottom: 80px; }
     if (!ganador1) return;
     document.getElementById('final-num-1').textContent  = ganador1.num;
     document.getElementById('final-name-1').textContent = ganador1.nombre;
-    document.getElementById('final-vend-1').textContent = ganador1.vendedor ? `Vendedor: ${ganador1.vendedor}` : '';
+    document.getElementById('final-vend-1').textContent = '';
     document.getElementById('sorteo-bg').classList.remove('open');
     document.getElementById('sorteo-final-bg').classList.add('open');
   }
@@ -1297,12 +1297,12 @@ body { padding-bottom: 80px; }
         nameWin.textContent = dWinner?.nombre || '—';
         card.appendChild(nameWin);
 
-        if (dWinner?.vendedor) {
-          const vendEl = document.createElement('div');
-          vendEl.className = 'sorteo-winner-vendedor';
-          vendEl.textContent = 'Vendedor: ' + dWinner.vendedor;
-          card.appendChild(vendEl);
-        }
+        // vendedor oculto en sorteo
+
+
+
+
+
         card.style.display = 'block';
 
         if (esPrimero) {
@@ -1311,7 +1311,7 @@ body { padding-bottom: 80px; }
           actualizarBannerPremio();
           document.getElementById('sorteo-prev-num').textContent  = ganador1.num;
           document.getElementById('sorteo-prev-name').textContent = ganador1.nombre;
-          document.getElementById('sorteo-prev-vend').textContent = ganador1.vendedor ? 'Vendedor: ' + ganador1.vendedor : '';
+          document.getElementById('sorteo-prev-vend').textContent = '';
           document.getElementById('sorteo-prev-card').style.display = 'flex';
           // Actualizar contador para 2do sorteo
           const vEx2 = ganador1.vendedor ? ganador1.vendedor.trim().toLowerCase() : null;
@@ -1327,10 +1327,10 @@ body { padding-bottom: 80px; }
         } else {
           document.getElementById('final-num-1').textContent  = ganador1.num;
           document.getElementById('final-name-1').textContent = ganador1.nombre;
-          document.getElementById('final-vend-1').textContent = ganador1.vendedor ? 'Vendedor: ' + ganador1.vendedor : '';
+          document.getElementById('final-vend-1').textContent = '';
           document.getElementById('final-num-2').textContent  = winner;
           document.getElementById('final-name-2').textContent = dWinner?.nombre || '—';
-          document.getElementById('final-vend-2').textContent = dWinner?.vendedor ? 'Vendedor: ' + dWinner.vendedor : '';
+          document.getElementById('final-vend-2').textContent = '';
           sorteoRonda = 1;
           ganador1    = null;
           actualizarBannerPremio();
