@@ -490,101 +490,106 @@ body {
 .sorteo-winner-num       { font-size: 52px; font-weight: 900; line-height: 1; margin-bottom: 4px; }
 .sorteo-winner-comprador { font-size: 20px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
 .sorteo-winner-vendedor  { font-size: 13px; color: var(--text-muted); font-weight: 500; }
-/* ── Personaje hospitalario ── */
-.personaje-wrap {
-  display: flex; justify-content: center; align-items: flex-end;
-  height: 130px; margin: 8px 0 4px; overflow: hidden;
-  position: relative;
+/* ── Emoji nervioso ── */
+.emoji-wrap {
+  display: flex; flex-direction: column; align-items: center;
+  margin: 6px 0 2px; position: relative;
 }
-.personaje-wrap svg { overflow: visible; }
 
-/* Estados del personaje */
-.personaje-wrap.estado-reposo .cuerpo-grupo { animation: respirar 3s ease-in-out infinite; }
-.personaje-wrap.estado-sorteando .cuerpo-grupo { animation: saltar 0.38s ease-in-out infinite; }
-.personaje-wrap.estado-celebrando .cuerpo-grupo { animation: celebrar 0.5s ease-in-out infinite alternate; }
-
-@keyframes respirar {
-  0%,100% { transform: translateY(0px); }
-  50%      { transform: translateY(-3px); }
+/* Cara base */
+.emoji-face {
+  width: 88px; height: 88px;
+  position: relative; flex-shrink: 0;
 }
-@keyframes saltar {
+.emoji-face svg { overflow: visible; }
+
+/* Estado reposo: flota suavemente */
+.emoji-wrap.estado-reposo .emoji-face {
+  animation: flotar 3s ease-in-out infinite;
+}
+/* Estado sorteando: tiembla y mira de costado */
+.emoji-wrap.estado-sorteando .emoji-face {
+  animation: temblar 0.12s ease-in-out infinite;
+}
+/* Estado celebrando: salta de alegría */
+.emoji-wrap.estado-celebrando .emoji-face {
+  animation: saltar-emoji 0.45s ease-in-out infinite alternate;
+}
+
+@keyframes flotar {
   0%,100% { transform: translateY(0px) rotate(0deg); }
-  50%      { transform: translateY(-10px) rotate(-2deg); }
+  50%      { transform: translateY(-5px) rotate(1deg); }
 }
-@keyframes celebrar {
-  0%   { transform: translateY(0px) rotate(-6deg); }
-  100% { transform: translateY(-8px) rotate(6deg); }
+@keyframes temblar {
+  0%,100% { transform: translateX(0px) rotate(0deg); }
+  25%      { transform: translateX(-2px) rotate(-1deg); }
+  75%      { transform: translateX(2px) rotate(1deg); }
 }
-
-/* Brazos */
-.personaje-wrap.estado-reposo  .brazo-izq { transform-origin: 48px 62px; transform: rotate(10deg); }
-.personaje-wrap.estado-reposo  .brazo-der { transform-origin: 72px 62px; transform: rotate(-10deg); }
-.personaje-wrap.estado-sorteando .brazo-izq {
-  transform-origin: 48px 62px;
-  animation: agitar-izq 0.38s ease-in-out infinite;
-}
-.personaje-wrap.estado-sorteando .brazo-der {
-  transform-origin: 72px 62px;
-  animation: agitar-der 0.38s ease-in-out infinite;
-}
-.personaje-wrap.estado-celebrando .brazo-izq {
-  transform-origin: 48px 62px;
-  animation: subir-izq 0.5s ease-in-out infinite alternate;
-}
-.personaje-wrap.estado-celebrando .brazo-der {
-  transform-origin: 72px 62px;
-  animation: subir-der 0.5s ease-in-out infinite alternate;
+@keyframes saltar-emoji {
+  0%   { transform: translateY(0px) rotate(-4deg) scale(1); }
+  100% { transform: translateY(-12px) rotate(4deg) scale(1.08); }
 }
 
-@keyframes agitar-izq {
-  0%,100% { transform: rotate(10deg);  }
-  50%      { transform: rotate(40deg);  }
-}
-@keyframes agitar-der {
-  0%,100% { transform: rotate(-10deg); }
-  50%      { transform: rotate(-40deg); }
-}
-@keyframes subir-izq {
-  0%   { transform: rotate(10deg);  }
-  100% { transform: rotate(-80deg); }
-}
-@keyframes subir-der {
-  0%   { transform: rotate(-10deg); }
-  100% { transform: rotate(80deg);  }
-}
-
-/* Piernas */
-.personaje-wrap.estado-sorteando .pierna-izq {
-  transform-origin: 54px 110px;
-  animation: pierna-alt-izq 0.38s ease-in-out infinite;
-}
-.personaje-wrap.estado-sorteando .pierna-der {
-  transform-origin: 66px 110px;
-  animation: pierna-alt-der 0.38s ease-in-out infinite;
-}
-@keyframes pierna-alt-izq {
-  0%,100% { transform: rotate(0deg);   }
-  50%      { transform: rotate(-15deg); }
-}
-@keyframes pierna-alt-der {
-  0%,100% { transform: rotate(0deg);  }
-  50%      { transform: rotate(15deg); }
-}
-
-/* Ojos parpadeando */
+/* Ojos */
 @keyframes parpadear {
-  0%,90%,100% { transform: scaleY(1); }
-  95%         { transform: scaleY(0.1); }
+  0%,88%,100% { transform: scaleY(1); }
+  93%          { transform: scaleY(0.08); }
 }
-.ojo { animation: parpadear 3.5s ease-in-out infinite; transform-origin: center; }
-.ojo-der { animation-delay: 0.1s; }
+.ojo-emoji { animation: parpadear 4s ease-in-out infinite; transform-origin: center; }
+.ojo-emoji.der { animation-delay: 0.15s; }
 
-/* Texto animado debajo */
+/* Ojos nerviosos: se mueven de un lado al otro mirando el número */
+@keyframes mirar-nervioso {
+  0%,40%  { transform: translateX(0px); }
+  50%     { transform: translateX(4px); }
+  60%,100%{ transform: translateX(0px); }
+  70%     { transform: translateX(-4px); }
+  80%     { transform: translateX(0px); }
+}
+.emoji-wrap.estado-sorteando .pupila {
+  animation: mirar-nervioso 0.5s ease-in-out infinite;
+}
+
+/* Mano mordiéndose uñas */
+@keyframes morder {
+  0%,100% { transform: translateY(0px); }
+  50%      { transform: translateY(-6px); }
+}
+.emoji-wrap.estado-sorteando .mano-morder {
+  display: block;
+  animation: morder 0.5s ease-in-out infinite;
+}
+.mano-morder { display: none; }
+
+/* Estrellas de celebración */
+.estrella {
+  position: absolute;
+  font-size: 16px;
+  opacity: 0;
+  pointer-events: none;
+}
+.emoji-wrap.estado-celebrando .estrella { animation: explotar 0.7s ease-out forwards; }
+.estrella:nth-child(1) { top: -5px; left: 0px;  animation-delay: 0s; }
+.estrella:nth-child(2) { top: -10px; left: 50%; animation-delay: 0.05s; }
+.estrella:nth-child(3) { top: -5px; right: 0px; animation-delay: 0.1s; }
+.estrella:nth-child(4) { top: 20px; left: -10px;animation-delay: 0.08s; }
+.estrella:nth-child(5) { top: 20px; right: -10px;animation-delay: 0.12s; }
+@keyframes explotar {
+  0%   { opacity: 0; transform: scale(0) translateY(0); }
+  50%  { opacity: 1; transform: scale(1.2) translateY(-14px); }
+  100% { opacity: 0; transform: scale(0.8) translateY(-22px); }
+}
+/* Loop de celebración */
+.emoji-wrap.estado-celebrando .estrella {
+  animation: explotar 0.7s ease-out infinite;
+}
+
+/* Texto debajo */
 .personaje-msg {
-  font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.3px;
   color: var(--text-muted); text-align: center;
-  min-height: 16px; margin-bottom: 6px;
-  transition: opacity 0.3s;
+  min-height: 16px; margin-bottom: 4px;
+  transition: all 0.3s;
 }
 
 .sorteo-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
@@ -1299,9 +1304,25 @@ body { padding-bottom: 80px; }
     const pW = document.getElementById('personaje-wrap');
     const pM = document.getElementById('personaje-msg');
     const boca = document.getElementById('boca-personaje');
-    if (pW) pW.className = 'personaje-wrap estado-reposo';
-    if (pM) pM.textContent = '¡Listo para sortear! 🏥';
-    if (boca) boca.setAttribute('d','M55 44 Q60 48 65 44');
+    if (pW) pW.className = 'emoji-wrap estado-reposo';
+    if (pM) pM.textContent = '😰 ¡Esperando el sorteo!';
+    if (boca) {
+      boca.setAttribute('d','M30 60 Q44 57 58 60');
+      // Resetear cejas
+      const ci = document.getElementById('ceja-izq');
+      const cd = document.getElementById('ceja-der');
+      if (ci) ci.setAttribute('d','M20 24 Q27 21 34 24');
+      if (cd) cd.setAttribute('d','M54 24 Q61 21 68 24');
+      // Ocultar sudor y mano
+      const sudor = document.getElementById('sudor');
+      const brazo = document.getElementById('brazo-morder');
+      const puno  = document.getElementById('puno-morder');
+      const dedos = document.getElementById('dedos-morder');
+      if (sudor) sudor.setAttribute('opacity','0');
+      if (brazo) brazo.setAttribute('opacity','0');
+      if (puno)  puno.setAttribute('opacity','0');
+      if (dedos) dedos.setAttribute('opacity','0');
+    }
   }
   window.openSorteo = openSorteo;
 
@@ -1344,8 +1365,26 @@ body { padding-bottom: 80px; }
     const pWrap = document.getElementById('personaje-wrap');
     const pMsg  = document.getElementById('personaje-msg');
     const bocaEl = document.getElementById('boca-personaje');
-    if (pWrap) { pWrap.className = 'personaje-wrap estado-sorteando'; }
-    if (pMsg)  { pMsg.textContent = '¡Sorteando... 🎲'; }
+    if (pWrap) {
+      pWrap.className = 'emoji-wrap estado-sorteando';
+      // Mostrar sudor y mano
+      const sudor = document.getElementById('sudor');
+      const brazo = document.getElementById('brazo-morder');
+      const puno  = document.getElementById('puno-morder');
+      const dedos = document.getElementById('dedos-morder');
+      if (sudor) sudor.setAttribute('opacity','1');
+      if (brazo) brazo.setAttribute('opacity','1');
+      if (puno)  puno.setAttribute('opacity','1');
+      if (dedos) dedos.setAttribute('opacity','1');
+      // Cejas nerviosas (inclinadas hacia adentro)
+      const ci = document.getElementById('ceja-izq');
+      const cd = document.getElementById('ceja-der');
+      if (ci) ci.setAttribute('d','M20 26 Q27 22 34 27');
+      if (cd) cd.setAttribute('d','M54 27 Q61 22 68 26');
+      // Boca nerviosa (ondulada)
+      if (bocaEl) bocaEl.setAttribute('d','M30 62 Q37 58 44 62 Q51 66 58 62');
+    }
+    if (pMsg) pMsg.textContent = '😬 ¡Sorteando...';
 
     // Para el 2do sorteo: excluir números del vendedor ganador del 1er premio
     const vendedorExcluido = (sorteoRonda === 2 && ganador1 && ganador1.vendedor)
@@ -1417,10 +1456,26 @@ body { padding-bottom: 80px; }
         card.style.display = 'block';
 
         // Personaje: estado celebrando
-        if (pWrap) { pWrap.className = 'personaje-wrap estado-celebrando'; }
-        if (pMsg)  { pMsg.textContent = esPrimero ? '🎉 ¡Tenemos un ganador!' : '🥈 ¡Segundo ganador!'; }
-        // Boca abierta de alegría
-        if (bocaEl) { bocaEl.setAttribute('d','M54 44 Q60 51 66 44'); }
+        if (pWrap) {
+          pWrap.className = 'emoji-wrap estado-celebrando';
+          // Ocultar sudor y mano
+          const sudor = document.getElementById('sudor');
+          const brazo = document.getElementById('brazo-morder');
+          const puno  = document.getElementById('puno-morder');
+          const dedos = document.getElementById('dedos-morder');
+          if (sudor) sudor.setAttribute('opacity','0');
+          if (brazo) brazo.setAttribute('opacity','0');
+          if (puno)  puno.setAttribute('opacity','0');
+          if (dedos) dedos.setAttribute('opacity','0');
+          // Cejas levantadas de alegría
+          const ci = document.getElementById('ceja-izq');
+          const cd = document.getElementById('ceja-der');
+          if (ci) ci.setAttribute('d','M20 20 Q27 16 34 20');
+          if (cd) cd.setAttribute('d','M54 20 Q61 16 68 20');
+          // Boca abierta sonriendo
+          if (bocaEl) bocaEl.setAttribute('d','M26 58 Q44 74 62 58');
+        }
+        if (pMsg) pMsg.textContent = esPrimero ? '🥳 ¡Hay un ganador!' : '🎉 ¡Segundo ganador!';
 
         if (esPrimero) {
           ganador1 = { num: winner, nombre: dWinner?.nombre || '—', vendedor: dWinner?.vendedor || '' };
@@ -1443,9 +1498,23 @@ body { padding-bottom: 80px; }
           btn.textContent = '🎲 Sortear 2do Premio';
           // Personaje: volver a reposo entre rondas
           setTimeout(() => {
-            if (pWrap) { pWrap.className = 'personaje-wrap estado-reposo'; }
-            if (pMsg)  { pMsg.textContent = '¡Ahora el 2do premio! 🏥'; }
-            if (bocaEl) { bocaEl.setAttribute('d','M55 44 Q60 48 65 44'); }
+            if (pWrap) {
+              pWrap.className = 'emoji-wrap estado-reposo';
+              const sudor = document.getElementById('sudor');
+              const brazo = document.getElementById('brazo-morder');
+              const puno  = document.getElementById('puno-morder');
+              const dedos = document.getElementById('dedos-morder');
+              if (sudor) sudor.setAttribute('opacity','0');
+              if (brazo) brazo.setAttribute('opacity','0');
+              if (puno)  puno.setAttribute('opacity','0');
+              if (dedos) dedos.setAttribute('opacity','0');
+              const ci2 = document.getElementById('ceja-izq');
+              const cd2 = document.getElementById('ceja-der');
+              if (ci2) ci2.setAttribute('d','M20 24 Q27 21 34 24');
+              if (cd2) cd2.setAttribute('d','M54 24 Q61 21 68 24');
+              if (bocaEl) bocaEl.setAttribute('d','M30 60 Q44 57 58 60');
+            }
+            if (pMsg) pMsg.textContent = '😰 ¡Ahora el 2do premio!';
           }, 2000);
         } else {
           document.getElementById('final-num-1').textContent  = ganador1.num;
@@ -1506,81 +1575,56 @@ body { padding-bottom: 80px; }
         <div class="sorteo-prev-vend" id="sorteo-prev-vend"></div>
       </div>
     </div>
-    <!-- Personaje hospitalario -->
-    <div class="personaje-wrap estado-reposo" id="personaje-wrap">
-      <svg width="120" height="130" viewBox="0 0 120 130" xmlns="http://www.w3.org/2000/svg">
-        <g class="cuerpo-grupo">
-          <!-- Sombra suave -->
-          <ellipse cx="60" cy="128" rx="24" ry="4" fill="rgba(0,0,0,0.08)"/>
-
-          <!-- Piernas -->
-          <g class="pierna-izq">
-            <rect x="47" y="108" width="13" height="22" rx="5" fill="#4F46E5"/>
-            <rect x="44" y="126" width="16" height="7" rx="3" fill="#1E1B4B"/>
+    <!-- Emoji nervioso -->
+    <div class="emoji-wrap estado-reposo" id="personaje-wrap">
+      <span class="estrella">⭐</span>
+      <span class="estrella">✨</span>
+      <span class="estrella">🌟</span>
+      <span class="estrella">💫</span>
+      <span class="estrella">⭐</span>
+      <div class="emoji-face" id="emoji-face">
+        <svg width="88" height="88" viewBox="0 0 88 88" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="44" cy="86" rx="22" ry="4" fill="rgba(0,0,0,0.07)"/>
+          <circle cx="44" cy="44" r="38" fill="#FFD93D"/>
+          <circle cx="44" cy="44" r="38" fill="none" stroke="#F5C518" stroke-width="1.5"/>
+          <ellipse cx="18" cy="54" rx="9" ry="6" fill="#FF9B9B" opacity="0.45"/>
+          <ellipse cx="70" cy="54" rx="9" ry="6" fill="#FF9B9B" opacity="0.45"/>
+          <!-- Ojo izquierdo -->
+          <g class="ojo-emoji izq" style="transform-origin:27px 36px">
+            <ellipse cx="27" cy="36" rx="7" ry="8" fill="white"/>
+            <ellipse cx="27" cy="36" rx="7" ry="8" fill="none" stroke="#E8A800" stroke-width="1"/>
+            <g class="pupila">
+              <circle cx="27" cy="37" r="5" fill="#1a1a1a"/>
+              <circle cx="25" cy="35" r="1.8" fill="white"/>
+            </g>
           </g>
-          <g class="pierna-der">
-            <rect x="60" y="108" width="13" height="22" rx="5" fill="#4F46E5"/>
-            <rect x="60" y="126" width="16" height="7" rx="3" fill="#1E1B4B"/>
+          <!-- Ojo derecho -->
+          <g class="ojo-emoji der" style="transform-origin:61px 36px">
+            <ellipse cx="61" cy="36" rx="7" ry="8" fill="white"/>
+            <ellipse cx="61" cy="36" rx="7" ry="8" fill="none" stroke="#E8A800" stroke-width="1"/>
+            <g class="pupila">
+              <circle cx="61" cy="37" r="5" fill="#1a1a1a"/>
+              <circle cx="59" cy="35" r="1.8" fill="white"/>
+            </g>
           </g>
-
-          <!-- Cuerpo (guardapolvo blanco) -->
-          <rect x="40" y="58" width="40" height="52" rx="10" fill="#E0E7FF"/>
-          <!-- Cruz roja en el pecho -->
-          <rect x="56" y="68" width="8" height="3" rx="1" fill="#EF4444"/>
-          <rect x="58.5" y="65.5" width="3" height="8" rx="1" fill="#EF4444"/>
-
-          <!-- Brazo izquierdo -->
-          <g class="brazo-izq">
-            <rect x="28" y="60" width="13" height="8" rx="4" fill="#E0E7FF"/>
-            <!-- Mano izquierda -->
-            <ellipse cx="25" cy="64" rx="5" ry="5" fill="#FDDCAE"/>
-          </g>
-
-          <!-- Brazo derecho -->
-          <g class="brazo-der">
-            <rect x="79" y="60" width="13" height="8" rx="4" fill="#E0E7FF"/>
-            <!-- Mano derecha (con estetoscopio) -->
-            <ellipse cx="95" cy="64" rx="5" ry="5" fill="#FDDCAE"/>
-          </g>
-
-          <!-- Estetoscopio -->
-          <path d="M91 62 Q97 55 99 63 Q101 70 95 70 Q90 70 90 65"
-                stroke="#6B7280" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-          <circle cx="90" cy="65" r="2.5" fill="#6B7280"/>
-
-          <!-- Cuello -->
-          <rect x="54" y="50" width="12" height="12" rx="4" fill="#FDDCAE"/>
-
-          <!-- Cabeza -->
-          <ellipse cx="60" cy="38" rx="20" ry="21" fill="#FDDCAE"/>
-
-          <!-- Gorro de enfermero/a -->
-          <rect x="43" y="22" width="34" height="14" rx="7" fill="white"/>
-          <rect x="43" y="25" width="34" height="5" rx="0" fill="#4F46E5"/>
-          <rect x="57" y="18" width="6" height="10" rx="3" fill="white"/>
-          <!-- Cruz en el gorro -->
-          <rect x="59" y="22" width="2" height="7" rx="1" fill="#EF4444"/>
-          <rect x="57" y="24" width="6" height="2" rx="1" fill="#EF4444"/>
-
-          <!-- Ojos -->
-          <ellipse class="ojo ojo-izq" cx="53" cy="38" rx="3" ry="3.5" fill="white"/>
-          <ellipse class="ojo ojo-der" cx="67" cy="38" rx="3" ry="3.5" fill="white"/>
-          <circle cx="53.8" cy="38.5" r="1.8" fill="#1E1B4B"/>
-          <circle cx="67.8" cy="38.5" r="1.8" fill="#1E1B4B"/>
-          <!-- Brillo en ojos -->
-          <circle cx="54.5" cy="37.5" r="0.7" fill="white"/>
-          <circle cx="68.5" cy="37.5" r="0.7" fill="white"/>
-
+          <!-- Cejas -->
+          <path id="ceja-izq" d="M20 24 Q27 21 34 24" stroke="#8B6914" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <path id="ceja-der" d="M54 24 Q61 21 68 24" stroke="#8B6914" stroke-width="3" fill="none" stroke-linecap="round"/>
           <!-- Boca -->
-          <path id="boca-personaje" d="M55 44 Q60 48 65 44" stroke="#C2855A" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-
-          <!-- Mejillas rosadas -->
-          <ellipse cx="48" cy="42" rx="4" ry="2.5" fill="#FFB3B3" opacity="0.5"/>
-          <ellipse cx="72" cy="42" rx="4" ry="2.5" fill="#FFB3B3" opacity="0.5"/>
-        </g>
-      </svg>
+          <path id="boca-personaje" d="M30 60 Q44 57 58 60" stroke="#8B6914" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <!-- Sudor nervioso -->
+          <g id="sudor" opacity="0">
+            <ellipse cx="72" cy="22" rx="4" ry="5.5" fill="#74C0FC" opacity="0.85"/>
+            <polygon points="72,14 69,21 75,21" fill="#74C0FC" opacity="0.85"/>
+          </g>
+          <!-- Mano mordiéndose uñas -->
+          <rect id="brazo-morder" x="30" y="68" width="28" height="9" rx="4.5" fill="#FFD93D" stroke="#E8A800" stroke-width="1" opacity="0"/>
+          <rect id="puno-morder" x="54" y="65" width="14" height="13" rx="5" fill="#FBBF24" stroke="#E8A800" stroke-width="1" opacity="0"/>
+          <rect id="dedos-morder" x="55" y="62" width="12" height="6" rx="3" fill="#FCD34D" stroke="#E8A800" stroke-width="0.8" opacity="0"/>
+        </svg>
+      </div>
     </div>
-    <div class="personaje-msg" id="personaje-msg">¡Listo para sortear! 🏥</div>
+    <div class="personaje-msg" id="personaje-msg">😰 ¡Esperando el sorteo!</div>
 
     <!-- Ruleta -->
     <div class="sorteo-drum" id="sorteo-drum">—</div>
