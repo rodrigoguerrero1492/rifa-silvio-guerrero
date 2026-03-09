@@ -490,6 +490,103 @@ body {
 .sorteo-winner-num       { font-size: 52px; font-weight: 900; line-height: 1; margin-bottom: 4px; }
 .sorteo-winner-comprador { font-size: 20px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
 .sorteo-winner-vendedor  { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+/* ── Personaje hospitalario ── */
+.personaje-wrap {
+  display: flex; justify-content: center; align-items: flex-end;
+  height: 130px; margin: 8px 0 4px; overflow: hidden;
+  position: relative;
+}
+.personaje-wrap svg { overflow: visible; }
+
+/* Estados del personaje */
+.personaje-wrap.estado-reposo .cuerpo-grupo { animation: respirar 3s ease-in-out infinite; }
+.personaje-wrap.estado-sorteando .cuerpo-grupo { animation: saltar 0.38s ease-in-out infinite; }
+.personaje-wrap.estado-celebrando .cuerpo-grupo { animation: celebrar 0.5s ease-in-out infinite alternate; }
+
+@keyframes respirar {
+  0%,100% { transform: translateY(0px); }
+  50%      { transform: translateY(-3px); }
+}
+@keyframes saltar {
+  0%,100% { transform: translateY(0px) rotate(0deg); }
+  50%      { transform: translateY(-10px) rotate(-2deg); }
+}
+@keyframes celebrar {
+  0%   { transform: translateY(0px) rotate(-6deg); }
+  100% { transform: translateY(-8px) rotate(6deg); }
+}
+
+/* Brazos */
+.personaje-wrap.estado-reposo  .brazo-izq { transform-origin: 48px 62px; transform: rotate(10deg); }
+.personaje-wrap.estado-reposo  .brazo-der { transform-origin: 72px 62px; transform: rotate(-10deg); }
+.personaje-wrap.estado-sorteando .brazo-izq {
+  transform-origin: 48px 62px;
+  animation: agitar-izq 0.38s ease-in-out infinite;
+}
+.personaje-wrap.estado-sorteando .brazo-der {
+  transform-origin: 72px 62px;
+  animation: agitar-der 0.38s ease-in-out infinite;
+}
+.personaje-wrap.estado-celebrando .brazo-izq {
+  transform-origin: 48px 62px;
+  animation: subir-izq 0.5s ease-in-out infinite alternate;
+}
+.personaje-wrap.estado-celebrando .brazo-der {
+  transform-origin: 72px 62px;
+  animation: subir-der 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes agitar-izq {
+  0%,100% { transform: rotate(10deg);  }
+  50%      { transform: rotate(40deg);  }
+}
+@keyframes agitar-der {
+  0%,100% { transform: rotate(-10deg); }
+  50%      { transform: rotate(-40deg); }
+}
+@keyframes subir-izq {
+  0%   { transform: rotate(10deg);  }
+  100% { transform: rotate(-80deg); }
+}
+@keyframes subir-der {
+  0%   { transform: rotate(-10deg); }
+  100% { transform: rotate(80deg);  }
+}
+
+/* Piernas */
+.personaje-wrap.estado-sorteando .pierna-izq {
+  transform-origin: 54px 110px;
+  animation: pierna-alt-izq 0.38s ease-in-out infinite;
+}
+.personaje-wrap.estado-sorteando .pierna-der {
+  transform-origin: 66px 110px;
+  animation: pierna-alt-der 0.38s ease-in-out infinite;
+}
+@keyframes pierna-alt-izq {
+  0%,100% { transform: rotate(0deg);   }
+  50%      { transform: rotate(-15deg); }
+}
+@keyframes pierna-alt-der {
+  0%,100% { transform: rotate(0deg);  }
+  50%      { transform: rotate(15deg); }
+}
+
+/* Ojos parpadeando */
+@keyframes parpadear {
+  0%,90%,100% { transform: scaleY(1); }
+  95%         { transform: scaleY(0.1); }
+}
+.ojo { animation: parpadear 3.5s ease-in-out infinite; transform-origin: center; }
+.ojo-der { animation-delay: 0.1s; }
+
+/* Texto animado debajo */
+.personaje-msg {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+  color: var(--text-muted); text-align: center;
+  min-height: 16px; margin-bottom: 6px;
+  transition: opacity 0.3s;
+}
+
 .sorteo-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
 .btn-sorteo-go {
   background: linear-gradient(135deg, var(--accent), var(--accent2));
@@ -1188,7 +1285,7 @@ body { padding-bottom: 80px; }
     sorteoRonda = 1;
     ganador1    = null;
     actualizarBannerPremio();
-    document.getElementById('sorteo-count').textContent = `${vendidos.length} número${vendidos.length !== 1 ? 's' : ''} participando`;
+    document.getElementById('sorteo-count').textContent = '';
     document.getElementById('sorteo-drum').textContent = '—';
     document.getElementById('sorteo-drum').style.color = 'var(--accent)';
     document.getElementById('sorteo-drum-name').textContent = '';
@@ -1198,6 +1295,13 @@ body { padding-bottom: 80px; }
     btn.disabled = vendidos.length === 0;
     btn.textContent = '🎲 ¡Sortear!';
     document.getElementById('sorteo-bg').classList.add('open');
+    // Personaje: reset a reposo
+    const pW = document.getElementById('personaje-wrap');
+    const pM = document.getElementById('personaje-msg');
+    const boca = document.getElementById('boca-personaje');
+    if (pW) pW.className = 'personaje-wrap estado-reposo';
+    if (pM) pM.textContent = '¡Listo para sortear! 🏥';
+    if (boca) boca.setAttribute('d','M55 44 Q60 48 65 44');
   }
   window.openSorteo = openSorteo;
 
@@ -1236,6 +1340,13 @@ body { padding-bottom: 80px; }
     card.style.display = 'none';
     nameEl.textContent = '';
 
+    // Personaje: estado sorteando
+    const pWrap = document.getElementById('personaje-wrap');
+    const pMsg  = document.getElementById('personaje-msg');
+    const bocaEl = document.getElementById('boca-personaje');
+    if (pWrap) { pWrap.className = 'personaje-wrap estado-sorteando'; }
+    if (pMsg)  { pMsg.textContent = '¡Sorteando... 🎲'; }
+
     // Para el 2do sorteo: excluir números del vendedor ganador del 1er premio
     const vendedorExcluido = (sorteoRonda === 2 && ganador1 && ganador1.vendedor)
       ? ganador1.vendedor.trim().toLowerCase() : null;
@@ -1248,7 +1359,7 @@ body { padding-bottom: 80px; }
       if (vendedorExcluido && pool.length === 0) {
         countEl.textContent = '⚠️ Todos los números son del mismo vendedor — sorteando entre todos';
       } else if (vendedorExcluido) {
-        countEl.textContent = poolFinal.length + ' números de otros vendedores participando';
+        countEl.textContent = '';
       }
     }
 
@@ -1305,6 +1416,12 @@ body { padding-bottom: 80px; }
 
         card.style.display = 'block';
 
+        // Personaje: estado celebrando
+        if (pWrap) { pWrap.className = 'personaje-wrap estado-celebrando'; }
+        if (pMsg)  { pMsg.textContent = esPrimero ? '🎉 ¡Tenemos un ganador!' : '🥈 ¡Segundo ganador!'; }
+        // Boca abierta de alegría
+        if (bocaEl) { bocaEl.setAttribute('d','M54 44 Q60 51 66 44'); }
+
         if (esPrimero) {
           ganador1 = { num: winner, nombre: dWinner?.nombre || '—', vendedor: dWinner?.vendedor || '' };
           sorteoRonda = 2;
@@ -1320,10 +1437,16 @@ body { padding-bottom: 80px; }
           if (vEx2 && pool2.length === 0) {
             countEl.textContent = '⚠️ Todos los números son del mismo vendedor';
           } else if (vEx2) {
-            countEl.textContent = pool2F.length + ' números de otros vendedores';
+            countEl.textContent = '';
           }
           btn.disabled = false;
           btn.textContent = '🎲 Sortear 2do Premio';
+          // Personaje: volver a reposo entre rondas
+          setTimeout(() => {
+            if (pWrap) { pWrap.className = 'personaje-wrap estado-reposo'; }
+            if (pMsg)  { pMsg.textContent = '¡Ahora el 2do premio! 🏥'; }
+            if (bocaEl) { bocaEl.setAttribute('d','M55 44 Q60 48 65 44'); }
+          }, 2000);
         } else {
           document.getElementById('final-num-1').textContent  = ganador1.num;
           document.getElementById('final-name-1').textContent = ganador1.nombre;
@@ -1383,6 +1506,82 @@ body { padding-bottom: 80px; }
         <div class="sorteo-prev-vend" id="sorteo-prev-vend"></div>
       </div>
     </div>
+    <!-- Personaje hospitalario -->
+    <div class="personaje-wrap estado-reposo" id="personaje-wrap">
+      <svg width="120" height="130" viewBox="0 0 120 130" xmlns="http://www.w3.org/2000/svg">
+        <g class="cuerpo-grupo">
+          <!-- Sombra suave -->
+          <ellipse cx="60" cy="128" rx="24" ry="4" fill="rgba(0,0,0,0.08)"/>
+
+          <!-- Piernas -->
+          <g class="pierna-izq">
+            <rect x="47" y="108" width="13" height="22" rx="5" fill="#4F46E5"/>
+            <rect x="44" y="126" width="16" height="7" rx="3" fill="#1E1B4B"/>
+          </g>
+          <g class="pierna-der">
+            <rect x="60" y="108" width="13" height="22" rx="5" fill="#4F46E5"/>
+            <rect x="60" y="126" width="16" height="7" rx="3" fill="#1E1B4B"/>
+          </g>
+
+          <!-- Cuerpo (guardapolvo blanco) -->
+          <rect x="40" y="58" width="40" height="52" rx="10" fill="#E0E7FF"/>
+          <!-- Cruz roja en el pecho -->
+          <rect x="56" y="68" width="8" height="3" rx="1" fill="#EF4444"/>
+          <rect x="58.5" y="65.5" width="3" height="8" rx="1" fill="#EF4444"/>
+
+          <!-- Brazo izquierdo -->
+          <g class="brazo-izq">
+            <rect x="28" y="60" width="13" height="8" rx="4" fill="#E0E7FF"/>
+            <!-- Mano izquierda -->
+            <ellipse cx="25" cy="64" rx="5" ry="5" fill="#FDDCAE"/>
+          </g>
+
+          <!-- Brazo derecho -->
+          <g class="brazo-der">
+            <rect x="79" y="60" width="13" height="8" rx="4" fill="#E0E7FF"/>
+            <!-- Mano derecha (con estetoscopio) -->
+            <ellipse cx="95" cy="64" rx="5" ry="5" fill="#FDDCAE"/>
+          </g>
+
+          <!-- Estetoscopio -->
+          <path d="M91 62 Q97 55 99 63 Q101 70 95 70 Q90 70 90 65"
+                stroke="#6B7280" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+          <circle cx="90" cy="65" r="2.5" fill="#6B7280"/>
+
+          <!-- Cuello -->
+          <rect x="54" y="50" width="12" height="12" rx="4" fill="#FDDCAE"/>
+
+          <!-- Cabeza -->
+          <ellipse cx="60" cy="38" rx="20" ry="21" fill="#FDDCAE"/>
+
+          <!-- Gorro de enfermero/a -->
+          <rect x="43" y="22" width="34" height="14" rx="7" fill="white"/>
+          <rect x="43" y="25" width="34" height="5" rx="0" fill="#4F46E5"/>
+          <rect x="57" y="18" width="6" height="10" rx="3" fill="white"/>
+          <!-- Cruz en el gorro -->
+          <rect x="59" y="22" width="2" height="7" rx="1" fill="#EF4444"/>
+          <rect x="57" y="24" width="6" height="2" rx="1" fill="#EF4444"/>
+
+          <!-- Ojos -->
+          <ellipse class="ojo ojo-izq" cx="53" cy="38" rx="3" ry="3.5" fill="white"/>
+          <ellipse class="ojo ojo-der" cx="67" cy="38" rx="3" ry="3.5" fill="white"/>
+          <circle cx="53.8" cy="38.5" r="1.8" fill="#1E1B4B"/>
+          <circle cx="67.8" cy="38.5" r="1.8" fill="#1E1B4B"/>
+          <!-- Brillo en ojos -->
+          <circle cx="54.5" cy="37.5" r="0.7" fill="white"/>
+          <circle cx="68.5" cy="37.5" r="0.7" fill="white"/>
+
+          <!-- Boca -->
+          <path id="boca-personaje" d="M55 44 Q60 48 65 44" stroke="#C2855A" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+
+          <!-- Mejillas rosadas -->
+          <ellipse cx="48" cy="42" rx="4" ry="2.5" fill="#FFB3B3" opacity="0.5"/>
+          <ellipse cx="72" cy="42" rx="4" ry="2.5" fill="#FFB3B3" opacity="0.5"/>
+        </g>
+      </svg>
+    </div>
+    <div class="personaje-msg" id="personaje-msg">¡Listo para sortear! 🏥</div>
+
     <!-- Ruleta -->
     <div class="sorteo-drum" id="sorteo-drum">—</div>
     <div class="sorteo-drum-name" id="sorteo-drum-name"></div>
