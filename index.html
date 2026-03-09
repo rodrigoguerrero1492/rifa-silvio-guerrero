@@ -1390,7 +1390,13 @@ body { padding-bottom: 80px; }
     document.getElementById('sorteo-bg').classList.add('open');
     // Inicializar ruleta con números disponibles
     const vendidosInit = Object.keys(data);
-    if (window.ruletaInit && vendidosInit.length) window.ruletaInit(vendidosInit);
+    if (window.ruletaInit && vendidosInit.length) {
+      window.ruletaInit(vendidosInit);
+    } else if (!window.ruletaInit) {
+      // Fallback: intentar inicializar si aún no está lista
+      initRuleta();
+      if (window.ruletaInit && vendidosInit.length) window.ruletaInit(vendidosInit);
+    }
     // Personaje: reset a reposo
     const pW = document.getElementById('personaje-wrap');
     const pM = document.getElementById('personaje-msg');
@@ -1609,8 +1615,9 @@ body { padding-bottom: 80px; }
       });
     }
   }
+  window.runSorteo = runSorteo;
   /* ── RULETA ── */
-  (function initRuleta() {
+  function initRuleta() {
     const WHEEL_COLORS = [
       '#4F46E5','#7C3AED','#0EA5E9','#10B981','#F59E0B',
       '#EF4444','#EC4899','#8B5CF6','#14B8A6','#F97316',
@@ -1793,7 +1800,14 @@ body { padding-bottom: 80px; }
 
     // Dibujo inicial
     drawWheel(currentAngle);
-  })();
+  }
+
+  // Inicializar la ruleta una vez que el DOM esté listo
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initRuleta);
+  } else {
+    initRuleta();
+  }
 
   window.ruletaStop = function() {
     /* usado externamente si necesario */ };
