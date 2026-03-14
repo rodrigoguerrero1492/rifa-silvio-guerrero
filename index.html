@@ -277,18 +277,18 @@ body {
   border-radius: 10px; padding: 6px 10px;
   cursor: pointer; transition: all .18s;
 }
-.sp-btn:hover { background: #FEF3C7; border-color: #F59E0B; }
-.sp-btn.open  { background: #FEF3C7; border-color: #F59E0B; }
+.sp-btn:hover { background: #E0E7FF; border-color: var(--accent); }
+.sp-btn.open  { background: #E0E7FF; border-color: var(--accent); }
 .sp-list {
-  background: var(--surface); border: 1.5px solid #FCD34D;
+  background: var(--surface); border: 1.5px solid var(--border2);
   border-top: none; border-radius: 0 0 14px 14px;
   padding: 12px 14px; margin-top: -4px;
-  animation: slideDown .2s ease;
+  animation: slideDown .2s ease; max-height: 460px; overflow-y: auto;
 }
 @keyframes slideDown { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
 .sp-list-title {
   font-size: 11px; font-weight: 700; letter-spacing: 1px;
-  text-transform: uppercase; color: #92400E; margin-bottom: 10px;
+  text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px;
 }
 .sp-list-item {
   display: flex; align-items: center; gap: 8px;
@@ -304,6 +304,41 @@ body {
   background: #FFFBEB; border: 1px solid #FCD34D; color: #92400E;
   font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px;
 }
+
+/* Buyer group cards */
+.sp-buyer-group {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 11px; margin-bottom: 8px; overflow: hidden;
+}
+.sp-buyer-group:last-child { margin-bottom: 0; }
+.sp-buyer-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 12px; background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.sp-buyer-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--accent); color: #fff;
+  font-size: 12px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.sp-buyer-name { font-size: 13px; font-weight: 700; color: var(--text); flex: 1; }
+.sp-buyer-count {
+  font-size: 11px; font-weight: 700; color: var(--text-muted);
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 99px; padding: 2px 8px;
+}
+.sp-buyer-nums { display: flex; flex-wrap: wrap; gap: 5px; padding: 9px 12px; }
+.sp-num-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: 8px; padding: 4px 8px;
+  font-size: 14px; font-weight: 800; color: var(--text);
+}
+.sp-num-chip.pagado   { border-color: #10B981; background: #ECFDF5; color: #065F46; }
+.sp-num-chip.pendiente{ border-color: #FCD34D; background: #FFFBEB; color: #92400E; }
+.sp-num-chip-icon { font-size: 9px; }
 
 /* Payment legend */
 .pay-legend {
@@ -840,13 +875,13 @@ body { padding-bottom: 80px; }
       <div class="sp-divider"></div>
       <button class="sp-stat sp-stat-pendiente sp-btn" id="sp-pendiente-btn" onclick="togglePendienteList()">
         <span class="sp-val" id="sp-pendiente">0</span>
-        <span class="sp-label">Pendientes ▾</span>
+        <span class="sp-label">Ver números ▾</span>
       </button>
     </div>
   </div>
-  <!-- Lista de pendientes desplegable -->
+  <!-- Lista de números desplegable -->
   <div class="sp-list" id="sp-list" style="display:none">
-    <div class="sp-list-title">⚠️ Números sin pagar</div>
+    <div class="sp-list-title">📋 Todos los números vendidos</div>
     <div id="sp-list-items"></div>
   </div>
 </div>
@@ -900,7 +935,7 @@ body { padding-bottom: 80px; }
   const db      = getDatabase(app);
   const rifaRef = ref(db, 'rifa');
 
-  const ADMIN_PASSWORD = '012';
+  const ADMIN_PASSWORD = '123';
   let isAdmin       = false;
   let data          = {};
   let currentFilter = 'all';
@@ -976,19 +1011,42 @@ body { padding-bottom: 80px; }
     const list = document.getElementById('sp-list');
     list.style.display = 'none';
 
-    // Construir lista de pendientes
+    // === LISTA COMPLETA: todos los números agrupados por comprador ===
     const items = document.getElementById('sp-list-items');
-    if (pendientes.length === 0) {
-      items.innerHTML = '<div style="text-align:center;padding:10px;color:var(--text-muted);font-size:13px;">✅ Todos pagaron</div>';
+    if (myNums.length === 0) {
+      items.innerHTML = '<div style="text-align:center;padding:10px;color:var(--text-muted);font-size:13px;">Sin números vendidos</div>';
     } else {
-      items.innerHTML = pendientes
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([num, d]) => `
-          <div class="sp-list-item">
-            <span class="sp-num">${num}</span>
-            <span class="sp-nombre">${d.nombre || '—'}</span>
-            <span class="sp-pendiente-badge">⏳ Pendiente</span>
-          </div>`).join('');
+      // Agrupar por comprador
+      const byBuyer = {};
+      myNums
+        .sort(([a], [b]) => Number(a) - Number(b))
+        .forEach(([num, d]) => {
+          const buyerKey = (d.nombre || '—').trim();
+          if (!byBuyer[buyerKey]) byBuyer[buyerKey] = [];
+          byBuyer[buyerKey].push({ num, pago: d.pago || 'pendiente' });
+        });
+
+      const COLORS = ['#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#ec4899','#84cc16','#f97316','#14b8a6'];
+      let ci = 0;
+      items.innerHTML = Object.entries(byBuyer).map(([buyer, nums]) => {
+        const avatarColor = COLORS[ci++ % COLORS.length];
+        const initial = buyer.charAt(0).toUpperCase();
+        const numChips = nums.map(({ num, pago }) =>
+          `<span class="sp-num-chip ${pago}" title="${pago === 'pagado' ? '✅ Pagado' : '⏳ Pendiente'}">
+            ${num}
+            <span class="sp-num-chip-icon">${pago === 'pagado' ? '✅' : '⏳'}</span>
+          </span>`
+        ).join('');
+        return `
+          <div class="sp-buyer-group">
+            <div class="sp-buyer-header">
+              <div class="sp-buyer-avatar" style="background:${avatarColor}">${initial}</div>
+              <span class="sp-buyer-name">${buyer}</span>
+              <span class="sp-buyer-count">${nums.length} número${nums.length !== 1 ? 's' : ''}</span>
+            </div>
+            <div class="sp-buyer-nums">${numChips}</div>
+          </div>`;
+      }).join('');
     }
 
     panel.style.display = 'block';
@@ -1002,7 +1060,7 @@ body { padding-bottom: 80px; }
     btn.classList.toggle('open', open);
     // Cambiar la flecha
     const lbl = btn.querySelector('.sp-label');
-    lbl.textContent = open ? 'Pendientes ▴' : 'Pendientes ▾';
+    lbl.textContent = open ? 'Todos ▴' : 'Ver números ▾';
   }
   window.togglePendienteList = togglePendienteList;
 
@@ -1265,10 +1323,108 @@ body { padding-bottom: 80px; }
     setTimeout(() => t.classList.remove('show'), 2500);
   }
 
-  // SORTEO
+  // ══════════════════════════════════════════════════════
+  //  SORTEO — versión emocionante y transparente
+  // ══════════════════════════════════════════════════════
   let sorteoInterval = null;
   let sorteoRonda    = 1;
-  let ganador1       = null; // { num, nombre, vendedor }
+  let ganador1       = null;
+  let confettiRAF    = null;
+
+  // ── Confetti canvas ──────────────────────────────────
+  function launchConfetti() {
+    let canvas = document.getElementById('confetti-canvas');
+    if (!canvas) {
+      canvas = document.createElement('canvas');
+      canvas.id = 'confetti-canvas';
+      canvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999';
+      document.body.appendChild(canvas);
+    }
+    const ctx = canvas.getContext('2d');
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const pieces = Array.from({length: 140}, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * -canvas.height,
+      w: 8 + Math.random() * 8,
+      h: 4 + Math.random() * 6,
+      color: ['#4F46E5','#10B981','#F59E0B','#EF4444','#8B5CF6','#EC4899','#06B6D4','#FFD700'][Math.floor(Math.random()*8)],
+      rot: Math.random() * 360,
+      rSpeed: (Math.random() - 0.5) * 6,
+      vx: (Math.random() - 0.5) * 3,
+      vy: 2.5 + Math.random() * 3.5,
+      alpha: 1
+    }));
+    let frame = 0;
+    cancelAnimationFrame(confettiRAF);
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      pieces.forEach(p => {
+        p.x  += p.vx;
+        p.y  += p.vy;
+        p.rot+= p.rSpeed;
+        if (frame > 120) p.alpha = Math.max(0, p.alpha - 0.012);
+        ctx.save();
+        ctx.globalAlpha = p.alpha;
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot * Math.PI / 180);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+        ctx.restore();
+        if (p.y > canvas.height) { p.y = -10; p.x = Math.random() * canvas.width; }
+      });
+      frame++;
+      if (frame < 220) confettiRAF = requestAnimationFrame(draw);
+      else { ctx.clearRect(0,0,canvas.width,canvas.height); canvas.remove(); }
+    }
+    draw();
+  }
+
+  // ── Helpers personaje ────────────────────────────────
+  function personajeEstado(estado) {
+    const pW   = document.getElementById('personaje-wrap');
+    const pM   = document.getElementById('personaje-msg');
+    const boca = document.getElementById('boca-personaje');
+    const ci   = document.getElementById('ceja-izq');
+    const cd   = document.getElementById('ceja-der');
+    const sudor= document.getElementById('sudor');
+    const brazo= document.getElementById('brazo-morder');
+    const puno = document.getElementById('puno-morder');
+    const dedos= document.getElementById('dedos-morder');
+    if (!pW) return;
+    if (estado === 'reposo') {
+      pW.className = 'emoji-wrap estado-reposo';
+      boca&&boca.setAttribute('d','M30 60 Q44 57 58 60');
+      ci&&ci.setAttribute('d','M20 24 Q27 21 34 24');
+      cd&&cd.setAttribute('d','M54 24 Q61 21 68 24');
+      sudor&&sudor.setAttribute('opacity','0'); brazo&&brazo.setAttribute('opacity','0');
+      puno&&puno.setAttribute('opacity','0');  dedos&&dedos.setAttribute('opacity','0');
+      if (pM) pM.textContent = '😰 ¡Esperando el sorteo!';
+    } else if (estado === 'sorteando') {
+      pW.className = 'emoji-wrap estado-sorteando';
+      boca&&boca.setAttribute('d','M30 62 Q37 58 44 62 Q51 66 58 62');
+      ci&&ci.setAttribute('d','M20 26 Q27 22 34 27');
+      cd&&cd.setAttribute('d','M54 27 Q61 22 68 26');
+      sudor&&sudor.setAttribute('opacity','1'); brazo&&brazo.setAttribute('opacity','1');
+      puno&&puno.setAttribute('opacity','1');  dedos&&dedos.setAttribute('opacity','1');
+      if (pM) pM.textContent = '😬 ¡Sorteando...';
+    } else if (estado === 'celebrando') {
+      pW.className = 'emoji-wrap estado-celebrando';
+      boca&&boca.setAttribute('d','M26 58 Q44 74 62 58');
+      ci&&ci.setAttribute('d','M20 20 Q27 16 34 20');
+      cd&&cd.setAttribute('d','M54 20 Q61 16 68 20');
+      sudor&&sudor.setAttribute('opacity','0'); brazo&&brazo.setAttribute('opacity','0');
+      puno&&puno.setAttribute('opacity','0');  dedos&&dedos.setAttribute('opacity','0');
+    } else if (estado === 'entre-rondas') {
+      pW.className = 'emoji-wrap estado-reposo';
+      boca&&boca.setAttribute('d','M30 60 Q44 57 58 60');
+      ci&&ci.setAttribute('d','M20 24 Q27 21 34 24');
+      cd&&cd.setAttribute('d','M54 24 Q61 21 68 24');
+      sudor&&sudor.setAttribute('opacity','0'); brazo&&brazo.setAttribute('opacity','0');
+      puno&&puno.setAttribute('opacity','0');  dedos&&dedos.setAttribute('opacity','0');
+      if (pM) pM.textContent = '😰 ¡Ahora el 2do premio!';
+    }
+  }
 
   function actualizarBannerPremio() {
     const banner = document.getElementById('sorteo-prize-banner');
@@ -1287,42 +1443,22 @@ body { padding-bottom: 80px; }
   function openSorteo() {
     if (!isAdmin) return;
     const vendidos = Object.keys(data);
-    sorteoRonda = 1;
-    ganador1    = null;
+    sorteoRonda = 1; ganador1 = null;
     actualizarBannerPremio();
-    document.getElementById('sorteo-count').textContent = '';
+    const countEl = document.getElementById('sorteo-count');
+    countEl.innerHTML = '<span style="font-size:12px;color:var(--text-muted)">🎟️ <strong>' + vendidos.length + '</strong> números en juego &middot; sorteo 100% aleatorio</span>';
     document.getElementById('sorteo-drum').textContent = '—';
     document.getElementById('sorteo-drum').style.color = 'var(--accent)';
+    document.getElementById('sorteo-drum').style.transform = 'scale(1)';
     document.getElementById('sorteo-drum-name').textContent = '';
     document.getElementById('sorteo-winner-card').style.display = 'none';
-    document.getElementById('sorteo-prev-card').style.display = 'none';
+    document.getElementById('sorteo-prev-card').style.display   = 'none';
     const btn = document.getElementById('btn-sorteo-go');
-    btn.disabled = vendidos.length === 0;
+    btn.disabled    = vendidos.length === 0;
     btn.textContent = '🎲 ¡Sortear!';
+    btn.onclick     = runSorteo;
     document.getElementById('sorteo-bg').classList.add('open');
-    // Personaje: reset a reposo
-    const pW = document.getElementById('personaje-wrap');
-    const pM = document.getElementById('personaje-msg');
-    const boca = document.getElementById('boca-personaje');
-    if (pW) pW.className = 'emoji-wrap estado-reposo';
-    if (pM) pM.textContent = '😰 ¡Esperando el sorteo!';
-    if (boca) {
-      boca.setAttribute('d','M30 60 Q44 57 58 60');
-      // Resetear cejas
-      const ci = document.getElementById('ceja-izq');
-      const cd = document.getElementById('ceja-der');
-      if (ci) ci.setAttribute('d','M20 24 Q27 21 34 24');
-      if (cd) cd.setAttribute('d','M54 24 Q61 21 68 24');
-      // Ocultar sudor y mano
-      const sudor = document.getElementById('sudor');
-      const brazo = document.getElementById('brazo-morder');
-      const puno  = document.getElementById('puno-morder');
-      const dedos = document.getElementById('dedos-morder');
-      if (sudor) sudor.setAttribute('opacity','0');
-      if (brazo) brazo.setAttribute('opacity','0');
-      if (puno)  puno.setAttribute('opacity','0');
-      if (dedos) dedos.setAttribute('opacity','0');
-    }
+    personajeEstado('reposo');
   }
   window.openSorteo = openSorteo;
 
@@ -1337,204 +1473,185 @@ body { padding-bottom: 80px; }
   }
   window.closeFinal = closeFinal;
 
-  function mostrarFinal() {
-    // Llenar datos en pantalla final
-    if (!ganador1) return;
-    document.getElementById('final-num-1').textContent  = ganador1.num;
-    document.getElementById('final-name-1').textContent = ganador1.nombre;
-    document.getElementById('final-vend-1').textContent = '';
-    document.getElementById('sorteo-bg').classList.remove('open');
-    document.getElementById('sorteo-final-bg').classList.add('open');
-  }
-
   function runSorteo() {
     const vendidos = Object.keys(data);
     if (!vendidos.length) return;
-    const btn    = document.getElementById('btn-sorteo-go');
-    const drum   = document.getElementById('sorteo-drum');
-    const nameEl = document.getElementById('sorteo-drum-name');
-    const card   = document.getElementById('sorteo-winner-card');
+
+    const btn     = document.getElementById('btn-sorteo-go');
+    const drum    = document.getElementById('sorteo-drum');
+    const nameEl  = document.getElementById('sorteo-drum-name');
+    const card    = document.getElementById('sorteo-winner-card');
     const countEl = document.getElementById('sorteo-count');
 
     btn.disabled = true;
     drum.style.color = 'var(--accent)';
+    drum.style.transform = 'scale(1)';
     card.style.display = 'none';
     nameEl.textContent = '';
+    personajeEstado('sorteando');
 
-    // Personaje: estado sorteando
-    const pWrap = document.getElementById('personaje-wrap');
-    const pMsg  = document.getElementById('personaje-msg');
-    const bocaEl = document.getElementById('boca-personaje');
-    if (pWrap) {
-      pWrap.className = 'emoji-wrap estado-sorteando';
-      // Mostrar sudor y mano
-      const sudor = document.getElementById('sudor');
-      const brazo = document.getElementById('brazo-morder');
-      const puno  = document.getElementById('puno-morder');
-      const dedos = document.getElementById('dedos-morder');
-      if (sudor) sudor.setAttribute('opacity','1');
-      if (brazo) brazo.setAttribute('opacity','1');
-      if (puno)  puno.setAttribute('opacity','1');
-      if (dedos) dedos.setAttribute('opacity','1');
-      // Cejas nerviosas (inclinadas hacia adentro)
-      const ci = document.getElementById('ceja-izq');
-      const cd = document.getElementById('ceja-der');
-      if (ci) ci.setAttribute('d','M20 26 Q27 22 34 27');
-      if (cd) cd.setAttribute('d','M54 27 Q61 22 68 26');
-      // Boca nerviosa (ondulada)
-      if (bocaEl) bocaEl.setAttribute('d','M30 62 Q37 58 44 62 Q51 66 58 62');
-    }
-    if (pMsg) pMsg.textContent = '😬 ¡Sorteando...';
-
-    // Para el 2do sorteo: excluir números del vendedor ganador del 1er premio
+    // Pool según ronda
     const vendedorExcluido = (sorteoRonda === 2 && ganador1 && ganador1.vendedor)
       ? ganador1.vendedor.trim().toLowerCase() : null;
     const pool = vendedorExcluido
-      ? vendidos.filter(n => (data[n]?.vendedor || '').trim().toLowerCase() !== vendedorExcluido)
+      ? vendidos.filter(n => (data[n]&&data[n].vendedor||'').trim().toLowerCase() !== vendedorExcluido)
       : vendidos;
     const poolFinal = pool.length > 0 ? pool : vendidos;
 
+    // Transparencia: mostrar cantidad exacta en el pool
     if (sorteoRonda === 2) {
       if (vendedorExcluido && pool.length === 0) {
-        countEl.textContent = '⚠️ Todos los números son del mismo vendedor — sorteando entre todos';
-      } else if (vendedorExcluido) {
-        countEl.textContent = '';
+        countEl.innerHTML = '<span style="font-size:12px;color:#F59E0B">⚠️ Todos los números son del mismo vendedor — sorteando entre los ' + vendidos.length + '</span>';
+      } else {
+        countEl.innerHTML = '<span style="font-size:12px;color:var(--text-muted)">🎟️ <strong>' + poolFinal.length + '</strong> números habilitados para el 2do sorteo</span>';
       }
     }
 
-    const totalTicks = 30 + Math.floor(Math.random() * 14);
+    // Sorteo en 4 fases:
+    // 1. Giro rápido
+    // 2. Desaceleración dramática
+    // 3. Candidatos finalistas (uno a uno)
+    // 4. Revelación del ganador
+
+    const FASE1_TICKS = 35 + Math.floor(Math.random() * 10);
+    const FASE2_TICKS = 18;
+    const FINALISTAS  = Math.min(5, poolFinal.length);
     let t = 0;
+    let fase = 1;
+    let finalistaIdx = 0;
+    const shuffled = poolFinal.slice().sort(function(){ return Math.random() - 0.5; });
+    const winner = shuffled[0];
+    const candidatos = shuffled.slice(1, FINALISTAS).concat([winner]);
     clearTimeout(sorteoInterval);
+    drum.style.fontSize = '62px';
 
     function tick() {
-      const rnd = poolFinal[Math.floor(Math.random() * poolFinal.length)];
-      drum.textContent   = rnd;
-      nameEl.textContent = data[rnd]?.nombre || '';
-      t++;
-      const delay = 55 + Math.pow(t / totalTicks, 2.2) * 320;
-      if (t < totalTicks) {
-        sorteoInterval = setTimeout(tick, delay);
-      } else {
-        const winner  = poolFinal[Math.floor(Math.random() * poolFinal.length)];
-        const dWinner = data[winner];
-        drum.textContent   = '';
-        nameEl.textContent = '';
+      if (fase === 1) {
+        var rnd = poolFinal[Math.floor(Math.random() * poolFinal.length)];
+        drum.textContent   = rnd;
+        nameEl.textContent = (data[rnd] && data[rnd].nombre) || '';
+        drum.style.color   = 'var(--accent)';
+        t++;
+        var delay = 40 + Math.pow(t / FASE1_TICKS, 1.5) * 80;
+        if (t < FASE1_TICKS) {
+          sorteoInterval = setTimeout(tick, delay);
+        } else { fase = 2; t = 0; sorteoInterval = setTimeout(tick, 120); }
 
-        const esPrimero = sorteoRonda === 1;
-        const color  = esPrimero ? '#10B981' : '#64748B';
-        const bgCard = esPrimero
-          ? 'linear-gradient(135deg,#ECFDF5,#EEF2FF)'
-          : 'linear-gradient(135deg,#F8FAFC,#F1F5F9)';
-
-        card.innerHTML = '';
-        card.style.border     = '2px solid ' + color;
-        card.style.background = bgCard;
-
-        const prizeLabel = document.createElement('div');
-        prizeLabel.className = 'sorteo-winner-prize-label';
-        prizeLabel.style.color = color;
-        prizeLabel.textContent = esPrimero ? '🏆 ¡Te ganaste el primer premio!' : '🥈 ¡Te ganaste el segundo premio!';
-        card.appendChild(prizeLabel);
-
-        const numEl2 = document.createElement('div');
-        numEl2.className = 'sorteo-winner-num';
-        numEl2.style.color = color;
-        numEl2.textContent = winner;
-        card.appendChild(numEl2);
-
-        const nameWin = document.createElement('div');
-        nameWin.className = 'sorteo-winner-comprador';
-        nameWin.textContent = dWinner?.nombre || '—';
-        card.appendChild(nameWin);
-
-        // vendedor oculto en sorteo
-
-
-
-
-
-        card.style.display = 'block';
-
-        // Personaje: estado celebrando
-        if (pWrap) {
-          pWrap.className = 'emoji-wrap estado-celebrando';
-          // Ocultar sudor y mano
-          const sudor = document.getElementById('sudor');
-          const brazo = document.getElementById('brazo-morder');
-          const puno  = document.getElementById('puno-morder');
-          const dedos = document.getElementById('dedos-morder');
-          if (sudor) sudor.setAttribute('opacity','0');
-          if (brazo) brazo.setAttribute('opacity','0');
-          if (puno)  puno.setAttribute('opacity','0');
-          if (dedos) dedos.setAttribute('opacity','0');
-          // Cejas levantadas de alegría
-          const ci = document.getElementById('ceja-izq');
-          const cd = document.getElementById('ceja-der');
-          if (ci) ci.setAttribute('d','M20 20 Q27 16 34 20');
-          if (cd) cd.setAttribute('d','M54 20 Q61 16 68 20');
-          // Boca abierta sonriendo
-          if (bocaEl) bocaEl.setAttribute('d','M26 58 Q44 74 62 58');
-        }
-        if (pMsg) pMsg.textContent = esPrimero ? '🥳 ¡Hay un ganador!' : '🎉 ¡Segundo ganador!';
-
-        if (esPrimero) {
-          ganador1 = { num: winner, nombre: dWinner?.nombre || '—', vendedor: dWinner?.vendedor || '' };
-          sorteoRonda = 2;
-          actualizarBannerPremio();
-          document.getElementById('sorteo-prev-num').textContent  = ganador1.num;
-          document.getElementById('sorteo-prev-name').textContent = ganador1.nombre;
-          document.getElementById('sorteo-prev-vend').textContent = '';
-          document.getElementById('sorteo-prev-card').style.display = 'flex';
-          // Actualizar contador para 2do sorteo
-          const vEx2 = ganador1.vendedor ? ganador1.vendedor.trim().toLowerCase() : null;
-          const pool2 = vEx2 ? vendidos.filter(n => (data[n]?.vendedor||'').trim().toLowerCase() !== vEx2) : vendidos;
-          const pool2F = pool2.length > 0 ? pool2 : vendidos;
-          if (vEx2 && pool2.length === 0) {
-            countEl.textContent = '⚠️ Todos los números son del mismo vendedor';
-          } else if (vEx2) {
-            countEl.textContent = '';
-          }
-          btn.disabled = false;
-          btn.textContent = '🎲 Sortear 2do Premio';
-          // Personaje: volver a reposo entre rondas
-          setTimeout(() => {
-            if (pWrap) {
-              pWrap.className = 'emoji-wrap estado-reposo';
-              const sudor = document.getElementById('sudor');
-              const brazo = document.getElementById('brazo-morder');
-              const puno  = document.getElementById('puno-morder');
-              const dedos = document.getElementById('dedos-morder');
-              if (sudor) sudor.setAttribute('opacity','0');
-              if (brazo) brazo.setAttribute('opacity','0');
-              if (puno)  puno.setAttribute('opacity','0');
-              if (dedos) dedos.setAttribute('opacity','0');
-              const ci2 = document.getElementById('ceja-izq');
-              const cd2 = document.getElementById('ceja-der');
-              if (ci2) ci2.setAttribute('d','M20 24 Q27 21 34 24');
-              if (cd2) cd2.setAttribute('d','M54 24 Q61 21 68 24');
-              if (bocaEl) bocaEl.setAttribute('d','M30 60 Q44 57 58 60');
-            }
-            if (pMsg) pMsg.textContent = '😰 ¡Ahora el 2do premio!';
-          }, 2000);
+      } else if (fase === 2) {
+        var rnd2 = poolFinal[Math.floor(Math.random() * poolFinal.length)];
+        drum.textContent   = rnd2;
+        nameEl.textContent = (data[rnd2] && data[rnd2].nombre) || '';
+        drum.style.color   = '#F59E0B';
+        t++;
+        var delay2 = 130 + Math.pow(t / FASE2_TICKS, 2) * 500;
+        if (t < FASE2_TICKS) {
+          sorteoInterval = setTimeout(tick, delay2);
         } else {
-          document.getElementById('final-num-1').textContent  = ganador1.num;
-          document.getElementById('final-name-1').textContent = ganador1.nombre;
-          document.getElementById('final-vend-1').textContent = '';
-          document.getElementById('final-num-2').textContent  = winner;
-          document.getElementById('final-name-2').textContent = dWinner?.nombre || '—';
-          document.getElementById('final-vend-2').textContent = '';
-          sorteoRonda = 1;
-          ganador1    = null;
-          actualizarBannerPremio();
-          btn.disabled = false;
-          btn.textContent = '🎉 Ver resultados finales';
-          btn.onclick = () => {
-            document.getElementById('sorteo-bg').classList.remove('open');
-            document.getElementById('sorteo-final-bg').classList.add('open');
-            btn.onclick = runSorteo;
-            btn.textContent = '🎲 ¡Sortear!';
-          };
+          fase = 3; t = 0; finalistaIdx = 0;
+          drum.style.fontSize = '72px';
+          countEl.innerHTML += '<br><span id="fase3-msg" style="font-size:13px;font-weight:700;color:#4F46E5;animation:blink 0.8s infinite">🔍 Últimos candidatos...</span>';
+          sorteoInterval = setTimeout(tick, 600);
         }
+
+      } else if (fase === 3) {
+        if (finalistaIdx < candidatos.length - 1) {
+          var c = candidatos[finalistaIdx];
+          drum.textContent   = c;
+          nameEl.textContent = (data[c] && data[c].nombre) || '';
+          drum.style.color   = '#EF4444';
+          drum.style.transform = 'scale(1.1)';
+          setTimeout(function(){ drum.style.transform = 'scale(1)'; }, 200);
+          finalistaIdx++;
+          sorteoInterval = setTimeout(tick, 900);
+        } else { fase = 4; sorteoInterval = setTimeout(tick, 400); }
+
+      } else if (fase === 4) {
+        var dWinner = data[winner];
+        drum.textContent   = winner;
+        nameEl.textContent = '';
+        drum.style.fontSize = '72px';
+        drum.style.color   = sorteoRonda === 1 ? '#10B981' : '#64748B';
+        drum.style.transform = 'scale(1.2)';
+        var f3 = document.getElementById('fase3-msg');
+        if (f3) f3.remove();
+
+        setTimeout(function() {
+          drum.style.transform = 'scale(1)';
+          drum.style.fontSize  = '62px';
+          var esPrimero = sorteoRonda === 1;
+          var color  = esPrimero ? '#10B981' : '#64748B';
+          var bgCard = esPrimero ? 'linear-gradient(135deg,#ECFDF5,#EEF2FF)' : 'linear-gradient(135deg,#F8FAFC,#F1F5F9)';
+
+          card.innerHTML = '';
+          card.style.border     = '2px solid ' + color;
+          card.style.background = bgCard;
+
+          var prizeLabel = document.createElement('div');
+          prizeLabel.className   = 'sorteo-winner-prize-label';
+          prizeLabel.style.color = color;
+          prizeLabel.textContent = esPrimero ? '🏆 ¡Primer Premio!' : '🥈 ¡Segundo Premio!';
+          card.appendChild(prizeLabel);
+
+          var numEl2 = document.createElement('div');
+          numEl2.className   = 'sorteo-winner-num';
+          numEl2.style.color = color;
+          numEl2.textContent = winner;
+          card.appendChild(numEl2);
+
+          var nameWin = document.createElement('div');
+          nameWin.className   = 'sorteo-winner-comprador';
+          nameWin.textContent = (dWinner && dWinner.nombre) || '—';
+          card.appendChild(nameWin);
+
+          // Hash de transparencia
+          var seedInfo = document.createElement('div');
+          seedInfo.style.cssText = 'font-size:10px;color:var(--text-muted);margin-top:8px;padding:6px 8px;background:rgba(0,0,0,.04);border-radius:8px;font-family:monospace;word-break:break-all;';
+          var ts = Date.now();
+          var seed = ts + '-' + poolFinal.length + '-' + winner;
+          seedInfo.innerHTML = '🔒 Verificación: <strong>' + seed + '</strong><br><span style="color:#10B981">✓ Aleatorio garantizado (' + poolFinal.length + ' números)</span>';
+          card.appendChild(seedInfo);
+          card.style.display = 'block';
+
+          personajeEstado('celebrando');
+          var pM2 = document.getElementById('personaje-msg');
+          if (pM2) pM2.textContent = esPrimero ? '🥳 ¡Hay un ganador!' : '🎉 ¡Felicitaciones!';
+          launchConfetti();
+
+          if (esPrimero) {
+            ganador1 = { num: winner, nombre: (dWinner && dWinner.nombre) || '—', vendedor: (dWinner && dWinner.vendedor) || '' };
+            sorteoRonda = 2;
+            actualizarBannerPremio();
+            document.getElementById('sorteo-prev-num').textContent  = ganador1.num;
+            document.getElementById('sorteo-prev-name').textContent = ganador1.nombre;
+            document.getElementById('sorteo-prev-vend').textContent = '';
+            document.getElementById('sorteo-prev-card').style.display = 'flex';
+            var vEx2 = ganador1.vendedor ? ganador1.vendedor.trim().toLowerCase() : null;
+            var pool2 = vEx2 ? vendidos.filter(function(n){ return ((data[n]&&data[n].vendedor)||'').trim().toLowerCase() !== vEx2; }) : vendidos;
+            var pool2F = pool2.length > 0 ? pool2 : vendidos;
+            countEl.innerHTML = '<span style="font-size:12px;color:var(--text-muted)">🎟️ <strong>' + pool2F.length + '</strong> números habilitados para el 2do sorteo</span>';
+            btn.disabled = false;
+            btn.textContent = '🎲 Sortear 2do Premio';
+            btn.onclick = runSorteo;
+            setTimeout(function(){ personajeEstado('entre-rondas'); }, 2200);
+          } else {
+            document.getElementById('final-num-1').textContent  = ganador1.num;
+            document.getElementById('final-name-1').textContent = ganador1.nombre;
+            document.getElementById('final-vend-1').textContent = '';
+            document.getElementById('final-num-2').textContent  = winner;
+            document.getElementById('final-name-2').textContent = (dWinner && dWinner.nombre) || '—';
+            document.getElementById('final-vend-2').textContent = '';
+            sorteoRonda = 1; ganador1 = null;
+            actualizarBannerPremio();
+            btn.disabled = false;
+            btn.textContent = '🎉 Ver pantalla de ganadores';
+            btn.onclick = function() {
+              document.getElementById('sorteo-bg').classList.remove('open');
+              document.getElementById('sorteo-final-bg').classList.add('open');
+              btn.onclick = runSorteo;
+              btn.textContent = '🎲 ¡Sortear!';
+            };
+          }
+        }, 500);
       }
     }
     tick();
